@@ -1,31 +1,19 @@
 import React, { Component } from "react";
-import {
-  View,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  ImageBackground,
-  Image,
-  Alert
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, TextInput ,ImageBackground,Image,Alert} from "react-native";
 import * as Permissions from "expo-permissions";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import db from '../config';
-
-const bgImage = require("../assets/background2.png");
-const appIcon = require("../assets/appIcon.png");
-const appName = require("../assets/appName.png");
 
 export default class TransactionScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      bookId: "",
-      studentId: "",
       domState: "normal",
       hasCameraPermissions: null,
-      scanned: false
+      scanned: false,
+      scannedData: "",
+      bookId:"",
+      studentId : ""
     };
   }
 
@@ -43,15 +31,14 @@ export default class TransactionScreen extends Component {
   };
 
   handleBarCodeScanned = async ({ type, data }) => {
-    const { domState } = this.state;
-
-    if (domState === "bookId") {
+    const {domState} = this.state;
+    if(domState === "bookId"){
       this.setState({
         bookId: data,
         domState: "normal",
         scanned: true
       });
-    } else if (domState === "studentId") {
+    }else{
       this.setState({
         studentId: data,
         domState: "normal",
@@ -61,10 +48,10 @@ export default class TransactionScreen extends Component {
   };
 
   handleTransaction=()=>{
-    Alert.alert("clicked submit")
+   
     var {bookId} = this.state;
     db.collection("Books")
-    .doc("BSC001")
+    .doc(bookId)
     .get()
     .then(doc=>{
       var book = doc.data();
@@ -86,7 +73,7 @@ export default class TransactionScreen extends Component {
   }
 
   render() {
-    const { bookId, studentId, domState, scanned } = this.state;
+    const { domState, hasCameraPermissions, scannedData, scanned } = this.state;
     if (domState !== "normal") {
       return (
         <BarCodeScanner
@@ -95,47 +82,43 @@ export default class TransactionScreen extends Component {
         />
       );
     }
+
     return (
       <View style={styles.container}>
-        <ImageBackground source={bgImage} style={styles.bgImage}>
-          <View style={styles.upperContainer}>
-            <Image source={appIcon} style={styles.appIcon} />
-            <Image source={appName} style={styles.appName} />
-          </View>
-          <View style={styles.lowerContainer}>
-            <View style={styles.textinputContainer}>
-              <TextInput
-                style={styles.textinput}
-                placeholder={"Book Id"}
-                placeholderTextColor={"#FFFFFF"}
-                value={bookId}
-              />
-              <TouchableOpacity
-                style={styles.scanbutton}
-                onPress={() => this.getCameraPermissions("bookId")}
-              >
-                <Text style={styles.scanbuttonText}>Scan</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[styles.textinputContainer, { marginTop: 25 }]}>
-              <TextInput
-                style={styles.textinput}
-                placeholder={"Student Id"}
-                placeholderTextColor={"#FFFFFF"}
-                value={studentId}
-              />
-              <TouchableOpacity
-                style={styles.scanbutton}
-                onPress={() => this.getCameraPermissions("studentId")}
-              >
-                <Text style={styles.scanbuttonText}>Scan</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.submitButton} onPress={this.handleTransaction}>
-              <Text style={styles.submitText}> Submit </Text>
+        <ImageBackground source={require("../assets/background2.png")} style={styles.bgImage}>
+        <View style={styles.upperContainer}>
+          <Image source={require("../assets/appIcon.png")} style={styles.appIcon}/>
+          <Image source={require("../assets/appName.png") }style={styles.appName}/>
+        </View>
+       <View style={styles.lowerContainer}>
+          <View style={styles.textInputContainer}>
+            <TextInput style={styles.textInput}
+            placeholder={"Book Id"}
+            placeholderTextColor={"white"}
+            value={this.state.bookId}
+            />
+              <TouchableOpacity style={styles.button} onPress={()=>this.getCameraPermissions('bookId')}>
+              <Text style={styles.buttonText}> Scan</Text>
             </TouchableOpacity>
           </View>
-        </ImageBackground>
+
+          <View style={styles.textInputContainer}>
+            <TextInput style={styles.textInput}
+            placeholder={"Student Id"}
+            placeholderTextColor={"white"}
+            value={this.state.studentId}
+            />
+            <TouchableOpacity style={styles.button}  onPress={()=>this.getCameraPermissions('studentId')}>
+              <Text style={styles.buttonText}> Scan</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.submitButton} onPress={this.handleTransaction}>
+              <Text style={styles.submitText}> Submit </Text>
+            </TouchableOpacity>
+
+       </View>
+       </ImageBackground>
       </View>
     );
   }
@@ -144,65 +127,69 @@ export default class TransactionScreen extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF"
+    backgroundColor: "#5653D4"
   },
-  bgImage: {
-    flex: 1,
-    resizeMode: "cover",
-    justifyContent: "center"
+  text: {
+    color: "#ffff",
+    fontSize: 15
   },
-  upperContainer: {
-    flex: 0.5,
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  appIcon: {
-    width: 200,
-    height: 200,
-    resizeMode: "contain",
-    marginTop: 80
-  },
-  appName: {
-    width: 80,
-    height: 80,
-    resizeMode: "contain"
-  },
-  lowerContainer: {
-    flex: 0.5,
-    alignItems: "center"
-  },
-  textinputContainer: {
-    borderWidth: 2,
-    borderRadius: 10,
-    flexDirection: "row",
-    backgroundColor: "#9DFD24",
-    borderColor: "#FFFFFF"
-  },
-  textinput: {
-    width: "57%",
-    height: 50,
-    padding: 10,
-    borderColor: "#FFFFFF",
-    borderRadius: 10,
-    borderWidth: 3,
-    fontSize: 18,
-    backgroundColor: "#5653D4",
-    fontFamily: "Rajdhani_600SemiBold",
-    color: "#FFFFFF"
-  },
-  scanbutton: {
+  button: {
     width: 100,
     height: 50,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "#9DFD24",
     borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-    justifyContent: "center",
-    alignItems: "center"
+    borderBottomRightRadius:10
   },
-  scanbuttonText: {
+  buttonText: {
     fontSize: 24,
-    color: "#0A0101",
-    fontFamily: "Rajdhani_600SemiBold"
+    color: "#DA0101",
+    fontFamily:'Rajdhani_600SemiBold'
+  },
+  lowerContainer:{
+    flex:0.5,
+    alignItems:"center"
+  },
+  textInputContainer:{
+    borderWidth:2,
+    borderRadius:10,
+    flexDirection:"row",
+    backgroundColor:"#9DFD24",
+    borderColor:"white"
+  },
+  textInput:{
+    width:"57%",
+    height:50,
+    padding:10,
+    borderColor:"white",
+    borderRadius:10,
+    borderWidth:3,
+    fontSize:18,
+    backgroundColor:"#5653D4",
+    fontFamily:'Rajdhani_600SemiBold',
+    color:"white"
+  },
+  upperContainer:{
+    flex:0.5,
+    justifyContent:"center",
+    alignItems:"center"
+  },
+  bgImage:{
+    flex:1,
+    resizeMode:"cover",
+    justifyContent:"center"
+  },
+  appIcon:{
+    width:100,
+    height:100,
+    resizeMode:"contain",
+    marginTop:80
+  },
+  appName:{
+    width:80,
+    height:80,
+    resizeMode:"contain",
   },
   submitButton:{
     width:"43%",
@@ -218,4 +205,4 @@ const styles = StyleSheet.create({
     fontFamily:'Rajdhani_600SemiBold',
     color:"white"
   }
-});
+})
